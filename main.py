@@ -7,8 +7,9 @@ from sklearn.preprocessing import MinMaxScaler
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, LSTM
 
-# Function to load data from Yahoo Finance
+# Function to load data from Yahoo Finance for Indian stocks
 def load_data(ticker):
+    ticker = ticker + ".NS"  # For Indian stocks on NSE
     data = yf.download(ticker, start="2015-01-01", end="2023-01-01")
     return data
 
@@ -18,7 +19,7 @@ def plot_data(data, ticker):
     ax.plot(data['Close'], label='Closing Price')
     ax.set_title(f'{ticker} Stock Price')
     ax.set_xlabel('Date')
-    ax.set_ylabel('Price (USD)')
+    ax.set_ylabel('Price (INR)')
     plt.xticks(rotation=45)
     st.pyplot(fig)
 
@@ -75,47 +76,6 @@ def predict_future_price(model, test_data, scaler, time_step=60):
 
 # Streamlit app interface
 def main():
-    st.title("Stock Price Prediction App")
+    st.title("Indian Stock Price Prediction App")
     
-    # User input for ticker symbol
-    ticker = st.text_input("Enter Stock Ticker (e.g. AAPL, MSFT, TSLA)", "AAPL")
-    
-    if ticker:
-        # Load and display the stock data
-        data = load_data(ticker)
-        st.subheader(f"{ticker} Stock Data")
-        st.write(data.tail())
-
-        # Plot the stock data
-        plot_data(data, ticker)
-
-        # Preprocess data for LSTM
-        train_data, test_data, scaler = preprocess_data(data)
-        X_train, y_train = create_lstm_dataset(train_data)
-        X_test, y_test = create_lstm_dataset(test_data)
-
-        # Build and train the LSTM model
-        model = build_model()
-        model.fit(X_train, y_train, batch_size=32, epochs=10, verbose=1)
-
-        # Predict the stock price
-        predicted_price = predict_future_price(model, data['Close'].values.reshape(-1, 1), scaler)
-        st.subheader(f"Predicted next-day price for {ticker}: ${predicted_price:.2f}")
-
-        # Visualize the test predictions vs actual values
-        st.subheader(f"{ticker} Stock Price Prediction vs Actual")
-        predicted_prices = model.predict(X_test)
-        predicted_prices = scaler.inverse_transform(predicted_prices.reshape(-1, 1))
-        actual_prices = scaler.inverse_transform(y_test.reshape(-1, 1))
-
-        fig2, ax2 = plt.subplots()
-        ax2.plot(actual_prices, label="Actual Prices")
-        ax2.plot(predicted_prices, label="Predicted Prices")
-        ax2.set_title(f'{ticker} Price Prediction vs Actual')
-        ax2.set_xlabel('Time')
-        ax2.set_ylabel('Price (USD)')
-        plt.legend()
-        st.pyplot(fig2)
-
-if __name__ == '__main__':
-    main()
+    # User input for ticker 
