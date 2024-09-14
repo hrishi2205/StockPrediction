@@ -93,7 +93,7 @@ def predict_today_price(model, test_data, scaler, time_step=60):
 
 # Streamlit app interface
 def main():
-    st.title("Indian Stock Price Prediction App")
+    st.title("Stock Price Prediction by teamHrishi")
     
     # User input for stock ticker symbol (Indian stocks)
     ticker = st.text_input("Enter Indian Stock Ticker (e.g. RELIANCE.NS, TCS.NS, INFY.NS)", "RELIANCE.NS")
