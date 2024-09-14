@@ -14,7 +14,7 @@ def load_data(ticker):
     today = datetime.today().date()
     yesterday = today - timedelta(days=1)
     try:
-        data = yf.download(ticker, start="2015-01-01", end=yesterday.strftime('%Y-%m-%d'))
+        data = yf.download(ticker, start="2010-01-01", end=yesterday.strftime('%Y-%m-%d'))
         if data.empty:
             st.error("No data found for the ticker symbol. Please check the ticker symbol and try again.")
         return data
