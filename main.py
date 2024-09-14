@@ -81,19 +81,23 @@ def build_model(input_shape):
 
 # Function to predict today's stock price
 def predict_today_price(model, test_data, scaler, time_step=60):
-    last_60_days = test_data[-time_step:]
-    last_60_days_scaled = scaler.transform(last_60_days)
+    try:
+        last_60_days = test_data[-time_step:]
+        last_60_days_scaled = scaler.transform(last_60_days)
 
-    X_test = np.array([last_60_days_scaled])
-    X_test = np.reshape(X_test, (X_test.shape[0], X_test.shape[1], X_test.shape[2]))
+        X_test = np.array([last_60_days_scaled])
+        X_test = np.reshape(X_test, (X_test.shape[0], X_test.shape[1], X_test.shape[2]))
 
-    predicted_price = model.predict(X_test)
-    predicted_price = scaler.inverse_transform(np.concatenate((predicted_price, np.zeros((predicted_price.shape[0], 4))), axis=1))[:, 0]
-    return predicted_price[0]
+        predicted_price = model.predict(X_test)
+        predicted_price = scaler.inverse_transform(np.concatenate((predicted_price, np.zeros((predicted_price.shape[0], 4))), axis=1))[:, 0]
+        return predicted_price[0]
+    except Exception as e:
+        st.error(f"An error occurred while predicting today's price: {e}")
+        return None
 
 # Streamlit app interface
 def main():
-    st.title("Stock Price Prediction by teamHrishi")
+    st.title("Indian Stock Price Prediction App")
     
     # User input for stock ticker symbol (Indian stocks)
     ticker = st.text_input("Enter Indian Stock Ticker (e.g. RELIANCE.NS, TCS.NS, INFY.NS)", "RELIANCE.NS")
@@ -101,6 +105,10 @@ def main():
     if ticker:
         # Load and display the stock data till yesterday
         data = load_data(ticker)
+        if data.empty:
+            st.error(f"No data found for ticker {ticker}. Please check the ticker symbol.")
+            return
+        
         st.subheader(f"{ticker} Stock Data (Till Yesterday)")
         st.write(data.tail())
 
@@ -118,22 +126,23 @@ def main():
 
         # Predict today's stock price
         predicted_price_today = predict_today_price(model, data[['Close', 'SMA_20', 'SMA_50', 'EMA_20', 'RSI']].values, scaler)
-        st.subheader(f"Predicted Stock Price for Today ({ticker}): ₹{predicted_price_today:.2f}")
+        if predicted_price_today is not None:
+            st.subheader(f"Predicted Stock Price for Today ({ticker}): ₹{predicted_price_today:.2f}")
 
-        # Visualize test predictions vs actual values
-        st.subheader(f"{ticker} Stock Price Prediction vs Actual")
-        predicted_prices = model.predict(X_test)
-        predicted_prices = scaler.inverse_transform(np.concatenate((predicted_prices, np.zeros((predicted_prices.shape[0], 4))), axis=1))[:, 0]
-        actual_prices = scaler.inverse_transform(np.concatenate((y_test.reshape(-1, 1), np.zeros((y_test.shape[0], 4))), axis=1))[:, 0]
+            # Visualize test predictions vs actual values
+            st.subheader(f"{ticker} Stock Price Prediction vs Actual")
+            predicted_prices = model.predict(X_test)
+            predicted_prices = scaler.inverse_transform(np.concatenate((predicted_prices, np.zeros((predicted_prices.shape[0], 4))), axis=1))[:, 0]
+            actual_prices = scaler.inverse_transform(np.concatenate((y_test.reshape(-1, 1), np.zeros((y_test.shape[0], 4))), axis=1))[:, 0]
 
-        fig2, ax2 = plt.subplots()
-        ax2.plot(actual_prices, label="Actual Prices")
-        ax2.plot(predicted_prices, label="Predicted Prices")
-        ax2.set_title(f'{ticker} Price Prediction vs Actual')
-        ax2.set_xlabel('Time')
-        ax2.set_ylabel('Price (INR)')
-        plt.legend()
-        st.pyplot(fig2)
+            fig2, ax2 = plt.subplots()
+            ax2.plot(actual_prices, label="Actual Prices")
+            ax2.plot(predicted_prices, label="Predicted Prices")
+            ax2.set_title(f'{ticker} Price Prediction vs Actual')
+            ax2.set_xlabel('Time')
+            ax2.set_ylabel('Price (INR)')
+            plt.legend()
+            st.pyplot(fig2)
 
 if __name__ == '__main__':
     main()
